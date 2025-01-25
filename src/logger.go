@@ -2,19 +2,20 @@ package logger
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"time"
 )
 
 const (
-	INFO = iota
-	DEBUG
+	DEBUG = iota
+	INFO
 	ERROR
 )
 
 type Logger struct {
-	level      int
-	output     *os.File
+	*log.Logger
+	level int
+
 	timeEnable bool
 }
 
@@ -31,14 +32,16 @@ func CreateLogger(level int, output string, timeEnable bool) (*Logger, error) {
 			return nil, fmt.Errorf("error opening output file %s: %v", output, err)
 		}
 	}
+	out := log.New(outputFile, "", 0)
 	return &Logger{
-		level:      level,
-		output:     outputFile,
-		timeEnable: timeEnable,
+		out,
+		level,
+
+		timeEnable,
 	}, nil
 }
 
-func (l *Logger) log(level int, msg string) {
+func (l *Logger) Log(level int, format string, args ...interface{}) {
 	if level >= l.level {
 		levelStr := ""
 		switch level {
@@ -49,30 +52,10 @@ func (l *Logger) log(level int, msg string) {
 		case ERROR:
 			levelStr = "ERROR"
 		}
-		timeStr := ""
 		if l.timeEnable {
-			timeStr = time.Now().Format(time.RFC3339)
+			l.Logger.SetFlags(log.LstdFlags)
 		}
-		fmt.Printf("%s [%s] %s", timeStr, levelStr, msg)
-	}
-}
-
-func (l *Logger) Info(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	l.log(INFO, msg)
-}
-
-func (l *Logger) Debug(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	l.log(DEBUG, msg)
-}
-func (l *Logger) Error(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	l.log(ERROR, msg)
-}
-
-func (l *Logger) Close() {
-	if l.output != os.Stdout && l.output != os.Stderr {
-		_ = l.output.Close()
+		msg := fmt.Sprintf(format, args...)
+		l.Logger.Printf("[%s] %s\n", levelStr, msg)
 	}
 }

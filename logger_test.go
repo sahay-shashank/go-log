@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	logger "github.com/mainframematrix/go-log/src"
+	logger "github.com/mainframematrix/go-log"
 )
 
 func TestLogger(t *testing.T) {

@@ -9,17 +9,18 @@ import (
 const (
 	DEBUG = iota
 	INFO
+	WARN
 	ERROR
+	CRITICAL
 )
 
 type Logger struct {
 	*log.Logger
 	level int
-
 	timeEnable bool
 }
 
-func CreateLogger(level int, output string, timeEnable bool) (*Logger, error) {
+func CreateLogger(level int, output string, timeEnable bool) *Logger {
 	var outputFile *os.File
 	if output == "stdout" {
 		outputFile = os.Stdout
@@ -29,7 +30,7 @@ func CreateLogger(level int, output string, timeEnable bool) (*Logger, error) {
 		var err error
 		outputFile, err = os.OpenFile(output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
-			return nil, fmt.Errorf("error opening output file %s: %v", output, err)
+			log.Fatalf("error opening output file %s: %v", output, err)
 		}
 	}
 	out := log.New(outputFile, "", 0)
@@ -38,7 +39,7 @@ func CreateLogger(level int, output string, timeEnable bool) (*Logger, error) {
 		level,
 
 		timeEnable,
-	}, nil
+	}
 }
 
 func (l *Logger) Log(level int, format string, args ...interface{}) {
@@ -51,6 +52,10 @@ func (l *Logger) Log(level int, format string, args ...interface{}) {
 			levelStr = "DEBUG"
 		case ERROR:
 			levelStr = "ERROR"
+		case WARN:
+			levelStr = "WARN"
+		case CRITICAL:
+			levelStr = "CRITICAL"
 		}
 		if l.timeEnable {
 			l.Logger.SetFlags(log.LstdFlags)
